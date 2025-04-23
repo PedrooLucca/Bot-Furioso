@@ -1,0 +1,34 @@
+{
+  "name": "furia-cs-bot",
+  "version": "1.0.0",
+  "description": "Bot do Telegram para fãs da FURIA CS",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "keywords": [
+    "furia",
+    "csgo",
+    "telegram",
+    "bot"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.14.1",
+    "@types/node-telegram-bot-api": "^0.64.8",
+    "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.5.0",
+    "node-cache": "^5.1.2",
+    "node-telegram-bot-api": "^0.63.0",
+    "ts-node": "^10.9.2",
+    "twitter-api-v2": "^1.22.0",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
