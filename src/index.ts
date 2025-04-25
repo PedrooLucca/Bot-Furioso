@@ -41,8 +41,6 @@ Escolha uma opção abaixo para começar:`,
     );
 });
 
-
-
 bot.onText(/\/time/, async (msg) => {
     const chatId = msg.chat.id;
 
@@ -87,17 +85,35 @@ bot.on('callback_query', async (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const action = callbackQuery.data;
 
-    const responses: Record<string, string> = {
-        roster: `🎮 Time Atual da FURIA CS:\n\n• FalleN (Gabriel Toledo)\n• KSCERATO (Kaike Cerato)\n• yuurih (Yuri Boian)\n• molodoy (Danil Golubenko)\n• YEKINDAR (Mareks Gaļinskis)\n\n🎓 Coach: sidde (Sidnei Macedo)`,
-        matches: '🏆 Próximas partidas da FURIA: Em breve!',
-        ranking: '📊 Ranking Mundial: Em breve!',
-        help: `❓ Comandos Disponíveis:\n\n/start - Iniciar o bot\n/ajuda - Ver esta mensagem`
-    };
+    if (action === 'jogadores') {
+        try {
+            const players = await HLTVService.getFuriaPlayers();
+            const playersInfo = players.map((player, index) => {
+                if (index >= 5 && index < players.length - 1) {
+                    return `• *${player.name}* (BENCHED)`;
+                } else if (index === players.length - 1) {
+                    return `• *${player.name}* (COACH)`;
+                } else {
+                    return `• *${player.name}*`;
+                }
+            }).join('\n');
 
-    if (action && responses[action]) {
-        bot.sendMessage(chatId, responses[action]);
+            bot.sendMessage(chatId, `🔥 *Jogadores da FURIA* 🔥\n\n${playersInfo}`, { parse_mode: 'Markdown' });
+        } catch (error) {
+            bot.sendMessage(chatId, '❌ Não foi possível obter informações dos jogadores da FURIA.');
+        }
     } else {
-        bot.sendMessage(chatId, '❌ Ação desconhecida.');
+        const responses: Record<string, string> = {
+            matches: '🏆 Próximas partidas da FURIA: Em breve!',
+            ranking: '📊 Ranking Mundial: Em breve!',
+            help: `❓ Comandos Disponíveis:\n\n/start - Iniciar o bot\n/ajuda - Ver esta mensagem`
+        };
+
+        if (action && responses[action]) {
+            bot.sendMessage(chatId, responses[action]);
+        } else {
+            bot.sendMessage(chatId, '❌ Ação desconhecida.');
+        }
     }
 
     bot.answerCallbackQuery(callbackQuery.id);
