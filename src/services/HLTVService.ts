@@ -1,10 +1,12 @@
-import HLTV, { FullTeam } from 'hltv';
+import HLTV, { MatchPreview } from 'hltv';
 
 export class HLTVService {
+
+    // Método para obter informações dos jogadores
     static async getFuriaTeamInfo(): Promise<{ name: string; id: number; players: { name: string; id: number }[] }> {
-        const FURIA_TEAM_ID = 8297; // ID da FURIA na HLTV
+        const FURIA_TEAM_ID = 9455; // ID da FURIA na HLTV
         try {
-            const team: FullTeam = await HLTV.getTeam({ id: FURIA_TEAM_ID });
+            const team = await HLTV.getTeam({ id: FURIA_TEAM_ID });
             return {
                 name: team.name,
                 id: team.id,
@@ -23,6 +25,17 @@ export class HLTVService {
         } catch (error) {
             console.error('Erro ao buscar jogadores da FURIA:', error);
             throw new Error('Não foi possível obter informações dos jogadores da FURIA.');
+        }
+    }
+
+    static async getUpcomingMatches(): Promise<MatchPreview[]> {
+        const FURIA_TEAM_ID = 4494; // ID da FURIA na HLTV
+        try {
+            const matches = await HLTV.getMatches();
+            return matches.filter(match => match.team1?.id === FURIA_TEAM_ID || match.team2?.id === FURIA_TEAM_ID);
+        } catch (error) {
+            console.error('Erro ao buscar próximas partidas:', error);
+            throw new Error('Não foi possível obter as próximas partidas.');
         }
     }
 }

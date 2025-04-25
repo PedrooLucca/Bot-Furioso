@@ -19,45 +19,26 @@ function sendInlineKeyboard(chatId: number, text: string, keyboard: InlineKeyboa
     bot.sendMessage(chatId, text, options);
 }
 
+// Comando /start
+// Envia uma mensagem de boas-vindas e um menu com opções
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    const keyboard: InlineKeyboardButton[][] = [
-        [
-            { text: '🎮 Time atual', callback_data: 'jogadores' },
-            { text: '🏆 Próximas Partidas', callback_data: 'matches' }
-        ],
-        [
-            { text: '📊 Ranking Mundial', callback_data: 'ranking' },
-            { text: '❓ Ajuda', callback_data: 'help' }
-        ]
-    ];
 
-    sendInlineKeyboard(
-        chatId,
-        `🐯 Bem-vindo ao Bot Oficial de Fãs da FURIA CS!
+    const options = {
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: '📋 Jogadores', callback_data: 'jogadores' }],
+                [{ text: '🏆 Próximas Partidas', callback_data: 'partidas' }],
+                [{ text: '🌍 Ranking Mundial', callback_data: 'ranking' }]
+            ]
+        }
+    };
 
-Escolha uma opção abaixo para começar:`,
-        keyboard
-    );
+    bot.sendMessage(chatId, 'Bem-vindo ao Bot da FURIA! Escolha uma opção:', options);
 });
 
-bot.onText(/\/time/, async (msg) => {
-    const chatId = msg.chat.id;
-
-    try {
-        const team = await HLTVService.getFuriaTeamInfo();
-        const teamInfo = `
-🎮 *${team.name}* (ID: ${team.id})
-
-👥 Jogadores:
-${team.players.map(player => `- ${player.name} (${player.id})`).join('\n')}
-        `;
-        bot.sendMessage(chatId, teamInfo, { parse_mode: 'Markdown' });
-    } catch (error) {
-        bot.sendMessage(chatId, '❌ Não foi possível obter informações do time da FURIA.');
-    }
-});
-
+// Comando /jogadores
+// Envia uma mensagem com a lista de jogadores da FURIA
 bot.onText(/\/jogadores/, async (msg) => {
     const chatId = msg.chat.id;
 
@@ -79,6 +60,8 @@ bot.onText(/\/jogadores/, async (msg) => {
     }
 });
 
+// Botão jogadores
+// Envia uma mensagem com a lista de jogadores da FURIA
 bot.on('callback_query', async (callbackQuery) => {
     if (!callbackQuery.message) return;
 
@@ -102,21 +85,35 @@ bot.on('callback_query', async (callbackQuery) => {
         } catch (error) {
             bot.sendMessage(chatId, '❌ Não foi possível obter informações dos jogadores da FURIA.');
         }
-    } else {
-        const responses: Record<string, string> = {
-            matches: '🏆 Próximas partidas da FURIA: Em breve!',
-            ranking: '📊 Ranking Mundial: Em breve!',
-            help: `❓ Comandos Disponíveis:\n\n/start - Iniciar o bot\n/ajuda - Ver esta mensagem`
-        };
+    } 
+});
 
-        if (action && responses[action]) {
-            bot.sendMessage(chatId, responses[action]);
-        } else {
-            bot.sendMessage(chatId, '❌ Ação desconhecida.');
+// Botão partidas
+// Envia uma mensagem com as próximas partidas da FURIA
+bot.on('callback_query', async (callbackQuery) => {
+    const chatId = callbackQuery.message?.chat.id;
+    const data = callbackQuery.data;
+
+    if (data === 'partidas') {
+        try {
+            const partidas = await HLTVService.getUpcomingMatches();
+            if (partidas.length === 0) {
+                bot.sendMessage(chatId!, '🏆 Não há partidas futuras agendadas para a FURIA.');
+                return;
+            }
+
+            const partidasInfo = partidas.map(match => {
+                const date = new Date(match.date || 0).toLocaleString('pt-BR');
+                return `• ${match.team1?.name || 'TBD'} vs ${match.team2?.name || 'TBD'}\n  🕒 ${date}`;
+            }).join('\n\n');
+
+            bot.sendMessage(chatId!, `🏆 *Próximas Partidas da FURIA* 🏆\n\n${partidasInfo}`, { parse_mode: 'Markdown' });
+        } catch (error) {
+            bot.sendMessage(chatId!, '❌ Não foi possível obter as próximas partidas.');
         }
     }
-
-    bot.answerCallbackQuery(callbackQuery.id);
 });
+
+
 
 console.log('Bot está rodando! 🚀');
