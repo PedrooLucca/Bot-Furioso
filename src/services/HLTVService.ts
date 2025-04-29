@@ -72,4 +72,27 @@ export class HLTVService {
             throw new Error('Não foi possível obter o histórico de partidas da FURIA.');
         }
     }
+
+    static async getPlayerStats(playerId: number): Promise<{ name: string; stats: string }> {
+        try {
+            const player = await HLTV.getPlayer({ id: playerId });
+
+            const playerNick = player.ign || 'Desconhecido';
+
+            if (!player.statistics) {
+                throw new Error('Estatísticas do jogador não estão disponíveis.');
+            }
+
+            const { rating } = player.statistics;
+
+            return {
+                name: playerNick,
+                stats: `Rating: ${rating}`
+            };
+        } catch (error) {
+            console.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}:`, error);
+            throw new Error('Não foi possível obter as estatísticas do jogador.');
+        }
+    }
+
 }

@@ -31,35 +31,13 @@ bot.onText(/\/start/, (msg) => {
                 [{ text: '🏆 Próximas Partidas', callback_data: 'partidas' }],
                 [{ text: '🌍 Ranking Mundial', callback_data: 'ranking' }],
                 [{ text: '📜 Histórico de Partidas', callback_data: 'historico' }],
-                [{ text: '📊 Estatísticas', callback_data: 'estatisticas' }] 
+                [{ text: '📊 Estatísticas', callback_data: 'estatisticas' }],
+                [{ text: '🔗 Links Úteis', callback_data: 'links_uteis' }] // Novo botão
             ]
         }
     };
 
     bot.sendMessage(chatId, 'Bem-vindo ao Bot FURIOSO! Escolha uma opção:', options);
-});
-
-// Comando /jogadores
-// Envia uma mensagem com a lista de jogadores da FURIA
-bot.onText(/\/jogadores/, async (msg) => {
-    const chatId = msg.chat.id;
-
-    try {
-        const players = await HLTVService.getFuriaPlayers();
-        const playersInfo = players.map((player, index) => {
-            if (index >= 5 && index < players.length - 1) {
-                return `• *${player.name}* (BENCHED)`;
-            } else if (index === players.length - 1) {
-                return `• *${player.name}* (COACH)`;
-            } else {
-                return `• *${player.name}*`;
-            }
-        }).join('\n');
-
-        bot.sendMessage(chatId, `🔥 *Jogadores da FURIA* 🔥\n\n${playersInfo}`, { parse_mode: 'Markdown' });
-    } catch (error) {
-        bot.sendMessage(chatId, '❌ Não foi possível obter informações dos jogadores da FURIA.');
-    }
 });
 
 // Botão jogadores
@@ -171,6 +149,57 @@ bot.on('callback_query', async (callbackQuery) => {
             console.error('Erro ao buscar histórico de partidas:', error);
             bot.sendMessage(chatId!, '❌ Não foi possível obter o histórico de partidas da FURIA.');
         }
+    }
+});
+
+// Botão estatísticas
+// Envia uma mensagem com as estatísticas dos jogadores da FURIA
+bot.on('callback_query', async (callbackQuery) => {
+    if (!callbackQuery.message) return;
+
+    const chatId = callbackQuery.message.chat.id;
+    const action = callbackQuery.data;
+
+    if (action === 'estatisticas') {
+        try {
+            const players = await HLTVService.getFuriaPlayers();
+            const statsPromises = players.map(async (player) => {
+                try {
+                    const stats = await HLTVService.getPlayerStats(player.id);
+                    return `• *${stats.name}*\n  ${stats.stats}`;
+                } catch {
+                    return `• *${player.name}*\n  Estatísticas indisponíveis.`;
+                }
+            });
+
+            const statsInfo = await Promise.all(statsPromises);
+
+            bot.sendMessage(chatId, `📊 *Estatísticas dos Jogadores da FURIA* 📊\n\n${statsInfo.join('\n\n')}`, { parse_mode: 'Markdown' });
+        } catch (error) {
+            console.error('Erro ao buscar estatísticas dos jogadores:', error);
+            bot.sendMessage(chatId, '❌ Não foi possível obter as estatísticas dos jogadores da FURIA.');
+        }
+    }
+});
+
+// Callback para "Links Úteis"
+bot.on('callback_query', (callbackQuery) => {
+    if (!callbackQuery.message) return;
+
+    const chatId = callbackQuery.message.chat.id;
+    const action = callbackQuery.data;
+
+    if (action === 'links_uteis') {
+        const links = `
+🔗 *Links Úteis da FURIA* 🔗
+
+• [Site Oficial da FURIA](https://www.furia.gg)
+• [Twitter da FURIA](https://twitter.com/FURIA)
+• [Instagram da FURIA](https://www.instagram.com/furiagg)
+• [HLTV da FURIA](https://www.hltv.org/team/8297/furia)
+        `;
+
+        bot.sendMessage(chatId, links, { parse_mode: 'Markdown' });
     }
 });
 
