@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import TelegramBot, { InlineKeyboardButton } from 'node-telegram-bot-api';
 import { HLTVService } from './services/HLTVService';
+import schedule from 'node-schedule';
 
 dotenv.config();
 
@@ -19,6 +20,9 @@ function sendInlineKeyboard(chatId: number, text: string, keyboard: InlineKeyboa
     bot.sendMessage(chatId, text, options);
 }
 
+// Lista de usuários inscritos para notificações
+const subscribedUsers: Set<number> = new Set();
+
 // Comando /start
 // Envia uma mensagem de boas-vindas e um menu com opções
 bot.onText(/\/start/, (msg) => {
@@ -32,7 +36,11 @@ bot.onText(/\/start/, (msg) => {
                 [{ text: '🌍 Ranking Mundial', callback_data: 'ranking' }],
                 [{ text: '📜 Histórico de Partidas', callback_data: 'historico' }],
                 [{ text: '📊 Estatísticas', callback_data: 'estatisticas' }],
-                [{ text: '🔗 Links Úteis', callback_data: 'links_uteis' }] // Novo botão
+                [{ text: '🔗 Links Úteis', callback_data: 'links_uteis' }],
+                [
+                    { text: '🔔 Ativar Notificações', callback_data: 'ativar_notificacoes' },
+                    { text: '❌ Desativar Notificações', callback_data: 'desativar_notificacoes' }
+                ]
             ]
         }
     };
@@ -201,6 +209,65 @@ bot.on('callback_query', (callbackQuery) => {
 
         bot.sendMessage(chatId, links, { parse_mode: 'Markdown' });
     }
+});
+
+// Callback para ativar notificações
+bot.on('callback_query', (callbackQuery) => {
+    if (!callbackQuery.message) return;
+
+    const chatId = callbackQuery.message.chat.id;
+    const action = callbackQuery.data;
+
+    if (action === 'ativar_notificacoes') {
+        if (subscribedUsers.has(chatId)) {
+            bot.sendMessage(chatId, '✅ Você já está inscrito para receber notificações.');
+        } else {
+            subscribedUsers.add(chatId);
+            bot.sendMessage(chatId, '🔔 Notificações ativadas! Você receberá atualizações sobre as próximas partidas da FURIA.');
+        }
+    }
+
+    if (action === 'desativar_notificacoes') {
+        if (subscribedUsers.has(chatId)) {
+            subscribedUsers.delete(chatId);
+            bot.sendMessage(chatId, '❌ Notificações desativadas. Você não receberá mais atualizações.');
+        } else {
+            bot.sendMessage(chatId, '⚠️ Você não está inscrito para receber notificações.');
+        }
+    }
+});
+
+// Função para enviar notificações automáticas
+async function sendMatchNotifications() {
+    try {
+        const upcomingMatches = await HLTVService.getUpcomingMatches();
+
+        if (upcomingMatches.length === 0) {
+            console.log('Nenhuma partida futura encontrada.');
+            return;
+        }
+
+        const matchInfo = upcomingMatches.map(match => {
+            const date = new Date(match.date || 0).toLocaleString('pt-BR');
+            return `• ${match.team1?.name || 'TBD'} vs ${match.team2?.name || 'TBD'}\n  📅 ${date}`;
+        }).join('\n\n');
+
+        const message = `🏆 *Próximas Partidas da FURIA* 🏆\n\n${matchInfo}`;
+
+        subscribedUsers.forEach(chatId => {
+            bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        });
+
+        console.log('Notificações enviadas com sucesso!');
+    } catch (error) {
+        console.error('Erro ao enviar notificações automáticas:', error);
+    }
+}
+
+// Agendamento para verificar partidas futuras a cada 6 horas
+schedule.scheduleJob('0 */6 * * *', () => {
+    console.log('Verificando partidas futuras para notificações...');
+    sendMatchNotifications();
 });
 
 console.log('Bot está rodando! 🚀');

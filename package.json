@@ -24,12 +24,14 @@
     "dotenv": "^16.5.0",
     "hltv": "^3.5.0",
     "node-cache": "^5.1.2",
+    "node-schedule": "^2.1.1",
     "node-telegram-bot-api": "^0.63.0",
     "ts-node": "^10.9.2",
     "twitter-api-v2": "^1.22.0",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "@types/node-schedule": "^2.1.7",
     "nodemon": "^3.1.10"
   }
 }
