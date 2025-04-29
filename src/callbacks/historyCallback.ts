@@ -14,8 +14,9 @@ export const handleHistoryCallback = async (bot: TelegramBot, chatId: number): P
             const date = match.date ? new Date(match.date).toLocaleDateString('pt-BR') : 'Data desconhecida';
             const team1 = match.team1?.name || 'TBD';
             const team2 = match.team2?.name || 'TBD';
+            const result = match.result ? `Resultado: ${match.result.team1} - ${match.result.team2}` : 'Resultado indisponível';
 
-            return `• ${team1} vs ${team2}\n  📅 ${date}`; 
+            return `• ${team1} vs ${team2}\n  📅 ${date}\n  ${result}`;
         }).join('\n\n');
 
         bot.sendMessage(chatId, `📜 *Histórico de Partidas da FURIA* 📜\n\n${historyInfo}`, { parse_mode: 'Markdown' });
