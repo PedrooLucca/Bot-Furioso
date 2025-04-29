@@ -34,24 +34,30 @@ const subscribedUsers: Set<number> = new Set();
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
 
-    const options = {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '📋 Jogadores', callback_data: 'jogadores' }],
-                [{ text: '🏆 Próximas Partidas', callback_data: 'partidas' }],
-                [{ text: '🌍 Ranking Mundial', callback_data: 'ranking' }],
-                [{ text: '📜 Histórico de Partidas', callback_data: 'historico' }],
-                [{ text: '📊 Estatísticas', callback_data: 'estatisticas' }],
-                [{ text: '🔗 Links Úteis', callback_data: 'links_uteis' }],
-                [
-                    { text: '🔔 Ativar Notificações', callback_data: 'ativar_notificacoes' },
-                    { text: '❌ Desativar Notificações', callback_data: 'desativar_notificacoes' }
-                ]
-            ]
-        }
-    };
+    bot.sendAnimation(chatId, 'https://media.giphy.com/media/JYapch0Iz0UCArx1fc/giphy.gif')
+        .then(() => {
+            const options = {
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '📋 Jogadores', callback_data: 'jogadores' }],
+                        [{ text: '🏆 Próximas Partidas', callback_data: 'partidas' }],
+                        [{ text: '🌍 Ranking Mundial', callback_data: 'ranking' }],
+                        [{ text: '📜 Histórico de Partidas', callback_data: 'historico' }],
+                        [{ text: '📊 Estatísticas', callback_data: 'estatisticas' }],
+                        [{ text: '🔗 Links Úteis', callback_data: 'links_uteis' }],
+                        [
+                            { text: '🔔 Ativar Notificações', callback_data: 'ativar_notificacoes' },
+                            { text: '❌ Desativar Notificações', callback_data: 'desativar_notificacoes' }
+                        ]
+                    ]
+                }
+            };
 
-    bot.sendMessage(chatId, 'Bem-vindo ao Bot FURIOSO! Escolha uma opção:', options);
+            bot.sendMessage(chatId, 'Bem-vindo ao Bot FURIOSO! Escolha uma opção:', options);
+        })
+        .catch((error) => {
+            console.error('Erro ao enviar o GIF:', error);
+        });
 });
 
 bot.on('callback_query', async (callbackQuery) => {
