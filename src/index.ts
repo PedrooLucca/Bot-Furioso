@@ -7,6 +7,7 @@ import { handleMatchesCallback } from './callbacks/matchesCallback';
 import { handleRankingCallback } from './callbacks/rankingCallback';
 import { handleHistoryCallback } from './callbacks/historyCallback';
 import { handleStatsCallback } from './callbacks/statsCallback';
+import logger from './services/LoggerService';
 
 dotenv.config();
 
@@ -142,3 +143,4 @@ schedule.scheduleJob('0 */6 * * *', () => {
 });
 
 console.log('Bot está rodando! 🚀');
+logger.info('Bot está rodando! 🚀');

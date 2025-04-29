@@ -12,10 +12,14 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs/
 
 # Configurações locais do editor/IDE
 .vscode/
 .idea/
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
 
 # Arquivos de cache do sistema
 .DS_Store
@@ -25,7 +29,11 @@ Thumbs.db
 coverage/
 jest-cache/
 jest-config/
+.jest/
 
 # Arquivos temporários do sistema operacional
 *.swp
 *.swo
+
+# Arquivos de build temporários do TypeScript
+*.tsbuildinfo

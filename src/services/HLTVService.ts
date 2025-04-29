@@ -1,5 +1,6 @@
 import HLTV, { MatchPreview, TeamRanking, FullMatchResult } from 'hltv';
 import CacheService from './CacheService';
+import logger from './LoggerService';
 
 export class HLTVService {
 
@@ -24,6 +25,11 @@ export class HLTVService {
             return teamInfo;
         } catch (error) {
             console.error('Erro ao buscar informações da FURIA:', error);
+            if (error instanceof Error) {
+                logger.error(`Erro ao buscar informações da FURIA: ${error.message}`);
+            } else {
+                logger.error('Erro ao buscar informações da FURIA: Erro desconhecido');
+            }
             throw new Error('Não foi possível obter informações da FURIA.');
         }
     }
@@ -42,6 +48,11 @@ export class HLTVService {
             return team.players;
         } catch (error) {
             console.error('Erro ao buscar jogadores da FURIA:', error);
+            if (error instanceof Error) {
+                logger.error(`Erro ao buscar jogadores da FURIA: ${error.message}`);
+            } else {
+                logger.error('Erro ao buscar jogadores da FURIA: Erro desconhecido');
+            }
             throw new Error('Não foi possível obter informações dos jogadores da FURIA.');
         }
     }
@@ -63,6 +74,11 @@ export class HLTVService {
             return furiaMatches;
         } catch (error) {
             console.error('Erro ao buscar próximas partidas:', error);
+            if (error instanceof Error) {
+                logger.error(`Erro ao buscar próximas partidas: ${error.message}`);
+            } else {
+                logger.error('Erro ao buscar próximas partidas: Erro desconhecido');
+            }
             throw new Error('Não foi possível obter as próximas partidas.');
         }
     }
@@ -92,6 +108,11 @@ export class HLTVService {
             return null; // Caso a FURIA não esteja no ranking
         } catch (error) {
             console.error('Erro ao buscar ranking da FURIA:', error);
+            if (error instanceof Error) {
+                logger.error(`Erro ao buscar ranking da FURIA: ${error.message}`);
+            } else {
+                logger.error('Erro ao buscar ranking da FURIA: Erro desconhecido');
+            }
             throw new Error('Não foi possível obter o ranking da FURIA.');
         }
     }
@@ -117,6 +138,11 @@ export class HLTVService {
             return matchHistory;
         } catch (error) {
             console.error('Erro ao buscar histórico de partidas da FURIA:', error);
+            if (error instanceof Error) {
+                logger.error(`Erro ao buscar histórico de partidas da FURIA: ${error.message}`);
+            } else {
+                logger.error('Erro ao buscar histórico de partidas da FURIA: Erro desconhecido');
+            }
             throw new Error('Não foi possível obter o histórico de partidas da FURIA.');
         }
     }
@@ -149,6 +175,11 @@ export class HLTVService {
             return playerStats;
         } catch (error) {
             console.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}:`, error);
+            if (error instanceof Error) {
+                logger.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}: ${error.message}`);
+            } else {
+                logger.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}: Erro desconhecido`);
+            }
             throw new Error('Não foi possível obter as estatísticas do jogador.');
         }
     }
