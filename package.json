@@ -2,10 +2,10 @@
   "name": "furia-cs-bot",
   "version": "1.0.0",
   "description": "Bot do Telegram para fãs da FURIA CS",
-  "main": "src/index.ts",
+  "main": "src/bot/index.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "nodemon --exec ts-node src/bot/index.ts",
     "build": "tsc",
     "test": "jest"
   },
