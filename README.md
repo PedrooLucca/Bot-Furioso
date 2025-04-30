@@ -1,6 +1,6 @@
 # 📘 Visão Geral do Projeto
 
-O projeto **Desafio1-Furia-telegram** é um bot do Telegram desenvolvido para fãs do time de eSports FURIA CS:GO. Ele fornece informações como jogadores, próximas partidas, ranking mundial, histórico de partidas e estatísticas. O público-alvo são fãs da FURIA que desejam acompanhar as atualizações de forma prática.
+O projeto **BOT Furioso** é um bot do Telegram desenvolvido para fãs do time de CS da FURIA. Ele fornece informações como jogadores, próximas partidas, ranking mundial, histórico de partidas e estatísticas. O público-alvo são fãs da FURIA que desejam acompanhar as atualizações de forma prática.
 
 ### Tecnologias Utilizadas
 - **Node.js**: Ambiente de execução para JavaScript.
