@@ -1,3 +1,5 @@
+// Testes unitários para handleStatsCallback, verificando o envio de mensagens com as estatísticas dos jogadores da FURIA.
+
 import { handleStatsCallback } from '../src/callbacks/statsCallback';
 import TelegramBot from 'node-telegram-bot-api';
 import { HLTVService } from '../src/services/HLTVService';
@@ -5,6 +7,9 @@ import { HLTVService } from '../src/services/HLTVService';
 jest.mock('src/services/HLTVService');
 
 const mockedHLTVService = HLTVService as jest.Mocked<typeof HLTVService>;
+
+const CHAT_ID = 12345;
+const ERROR_MESSAGE = '❌ Não foi possível obter as estatísticas dos jogadores da FURIA.';
 
 describe('handleStatsCallback', () => {
     let bot: jest.Mocked<TelegramBot>;
@@ -32,20 +37,20 @@ describe('handleStatsCallback', () => {
             .mockResolvedValueOnce(mockStats[0])
             .mockResolvedValueOnce(mockStats[1]);
 
-        await handleStatsCallback(bot, 12345);
+        await handleStatsCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('📊 *Estatísticas dos Jogadores da FURIA* 📊'),
             { parse_mode: 'Markdown' }
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('• *Player1*\n  Rating: 1.2'),
             expect.any(Object)
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('• *Player2*\n  Rating: 1.1'),
             expect.any(Object)
         );
@@ -60,15 +65,15 @@ describe('handleStatsCallback', () => {
         mockedHLTVService.getFuriaPlayers.mockResolvedValueOnce(mockPlayers);
         mockedHLTVService.getPlayerStats.mockRejectedValue(new Error('Stats unavailable'));
 
-        await handleStatsCallback(bot, 12345);
+        await handleStatsCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('• *Player1*\n  Estatísticas indisponíveis.'),
             expect.any(Object)
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('• *Player2*\n  Estatísticas indisponíveis.'),
             expect.any(Object)
         );
@@ -77,11 +82,11 @@ describe('handleStatsCallback', () => {
     it('should send an error message if fetching players fails', async () => {
         mockedHLTVService.getFuriaPlayers.mockRejectedValueOnce(new Error('API Error'));
 
-        await handleStatsCallback(bot, 12345);
+        await handleStatsCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
-            '❌ Não foi possível obter as estatísticas dos jogadores da FURIA.'
+            CHAT_ID,
+            ERROR_MESSAGE
         );
     });
 });

@@ -1,9 +1,41 @@
+// Importando os módulos e serviços necessários
 import HLTV, { MatchPreview, TeamRanking, FullMatchResult } from 'hltv';
 import CacheService from './CacheService';
 import logger from './LoggerService';
 
+const FURIA_TEAM_ID = 8297; // ID do time FURIA na HLTV
+const MAX_MATCH_HISTORY = 5; // Número máximo de partidas no histórico
+
+export type { FullMatchResult };
+
+// Serviço para interagir com a API da HLTV e fornecer dados sobre o time FURIA.
 export class HLTVService {
 
+    // Busca informações detalhadas sobre um time na HLTV.
+    private static async fetchTeamInfo(teamId: number): Promise<any> {
+        return await HLTV.getTeam({ id: teamId });
+    }
+
+    // Processa os dados do time para extrair informações relevantes sobre os jogadores.
+    private static processTeamPlayers(team: { name: string; id: number; players: { name: string; id?: number }[] }): { name: string; id: number; players: { name: string; id: number }[] } {
+        return {
+            name: team.name,
+            id: team.id,
+            players: team.players.map(player => ({ name: player.name, id: player.id || 0 }))
+        };
+    }
+
+    // Lida com erros, registrando logs e fornecendo contexto.
+    private static handleError(error: unknown, context: string): void {
+        console.error(`${context}:`, error);
+        if (error instanceof Error) {
+            logger.error(`${context}: ${error.message}`);
+        } else {
+            logger.error(`${context}: Erro desconhecido`);
+        }
+    }
+
+    // Recupera informações sobre o time FURIA, incluindo seus jogadores.
     static async getFuriaTeamInfo(): Promise<{ name: string; id: number; players: { name: string; id: number }[] }> {
         const cacheKey = 'furiaTeamInfo';
         const cachedData = CacheService.get<{ name: string; id: number; players: { name: string; id: number }[] }>(cacheKey);
@@ -12,28 +44,43 @@ export class HLTVService {
             return cachedData;
         }
 
-        const FURIA_TEAM_ID = 8297; // ID da FURIA na HLTV
         try {
-            const team = await HLTV.getTeam({ id: FURIA_TEAM_ID });
-            const teamInfo = {
-                name: team.name,
-                id: team.id,
-                players: team.players.map(player => ({ name: player.name, id: player.id || 0 })) // Defaulting undefined IDs to 0
-            };
-
-            CacheService.set(cacheKey, teamInfo); // Cache the data
+            const team = await this.fetchTeamInfo(FURIA_TEAM_ID);
+            const teamInfo = this.processTeamPlayers(team);
+            CacheService.set(cacheKey, teamInfo);
             return teamInfo;
         } catch (error) {
-            console.error('Erro ao buscar informações da FURIA:', error);
-            if (error instanceof Error) {
-                logger.error(`Erro ao buscar informações da FURIA: ${error.message}`);
-            } else {
-                logger.error('Erro ao buscar informações da FURIA: Erro desconhecido');
-            }
-            throw new Error('Não foi possível obter informações da FURIA.');
+            this.handleError(error, 'Erro ao buscar informações do time FURIA');
+            throw new Error('Não foi possível obter informações do time FURIA.');
         }
     }
 
+    // Recupera o histórico de partidas do time FURIA.
+    static async getFuriaMatchHistory(): Promise<FullMatchResult[]> {
+        const cacheKey = 'furiaMatchHistory';
+        const cachedData = CacheService.get<FullMatchResult[]>(cacheKey);
+
+        if (cachedData) {
+            return cachedData;
+        }
+
+        try {
+            const results = await HLTV.getResults({ teamIds: [FURIA_TEAM_ID] });
+            if (!results || results.length === 0) {
+                console.warn('Nenhum resultado encontrado para o time FURIA.');
+                return [];
+            }
+
+            const matchHistory = results.slice(0, MAX_MATCH_HISTORY);
+            CacheService.set(cacheKey, matchHistory);
+            return matchHistory;
+        } catch (error) {
+            this.handleError(error, 'Erro ao buscar histórico de partidas do time FURIA');
+            throw new Error('Não foi possível obter o histórico de partidas do time FURIA.');
+        }
+    }
+
+    // Recupera a lista de jogadores do time FURIA.
     static async getFuriaPlayers(): Promise<{ name: string; id: number }[]> {
         const cacheKey = 'furiaPlayers';
         const cachedData = CacheService.get<{ name: string; id: number }[]>(cacheKey);
@@ -44,19 +91,15 @@ export class HLTVService {
 
         try {
             const team = await this.getFuriaTeamInfo();
-            CacheService.set(cacheKey, team.players); // Cache the data
+            CacheService.set(cacheKey, team.players);
             return team.players;
         } catch (error) {
-            console.error('Erro ao buscar jogadores da FURIA:', error);
-            if (error instanceof Error) {
-                logger.error(`Erro ao buscar jogadores da FURIA: ${error.message}`);
-            } else {
-                logger.error('Erro ao buscar jogadores da FURIA: Erro desconhecido');
-            }
-            throw new Error('Não foi possível obter informações dos jogadores da FURIA.');
+            this.handleError(error, 'Erro ao buscar jogadores do time FURIA');
+            throw new Error('Não foi possível obter os jogadores do time FURIA.');
         }
     }
 
+    // Recupera as próximas partidas envolvendo o time FURIA.
     static async getUpcomingMatches(): Promise<MatchPreview[]> {
         const cacheKey = 'upcomingMatches';
         const cachedData = CacheService.get<MatchPreview[]>(cacheKey);
@@ -65,24 +108,19 @@ export class HLTVService {
             return cachedData;
         }
 
-        const FURIA_TEAM_ID = 8297; // ID da FURIA na HLTV
         try {
             const matches = await HLTV.getMatches();
             const furiaMatches = matches.filter(match => match.team1?.id === FURIA_TEAM_ID || match.team2?.id === FURIA_TEAM_ID);
 
-            CacheService.set(cacheKey, furiaMatches); // Cache the data
+            CacheService.set(cacheKey, furiaMatches);
             return furiaMatches;
         } catch (error) {
-            console.error('Erro ao buscar próximas partidas:', error);
-            if (error instanceof Error) {
-                logger.error(`Erro ao buscar próximas partidas: ${error.message}`);
-            } else {
-                logger.error('Erro ao buscar próximas partidas: Erro desconhecido');
-            }
+            this.handleError(error, 'Erro ao buscar próximas partidas');
             throw new Error('Não foi possível obter as próximas partidas.');
         }
     }
 
+    // Recupera o ranking atual do time FURIA.
     static async getFuriaRanking(): Promise<{ position: number; points: number } | null> {
         const cacheKey = 'furiaRanking';
         const cachedData = CacheService.get<{ position: number; points: number } | null>(cacheKey);
@@ -101,52 +139,18 @@ export class HLTVService {
                     points: furiaRanking.points
                 };
 
-                CacheService.set(cacheKey, rankingData); // Cache the data
+                CacheService.set(cacheKey, rankingData);
                 return rankingData;
             }
 
-            return null; // Caso a FURIA não esteja no ranking
+            return null;
         } catch (error) {
-            console.error('Erro ao buscar ranking da FURIA:', error);
-            if (error instanceof Error) {
-                logger.error(`Erro ao buscar ranking da FURIA: ${error.message}`);
-            } else {
-                logger.error('Erro ao buscar ranking da FURIA: Erro desconhecido');
-            }
-            throw new Error('Não foi possível obter o ranking da FURIA.');
+            this.handleError(error, 'Erro ao buscar ranking do time FURIA');
+            throw new Error('Não foi possível obter o ranking do time FURIA.');
         }
     }
 
-    static async getFuriaMatchHistory(): Promise<FullMatchResult[]> {
-        const cacheKey = 'furiaMatchHistory';
-        const cachedData = CacheService.get<FullMatchResult[]>(cacheKey);
-
-        if (cachedData) {
-            return cachedData;
-        }
-
-        const FURIA_TEAM_ID = 8297; // ID da FURIA na HLTV
-        try {
-            const results = await HLTV.getResults({ teamIds: [FURIA_TEAM_ID] });
-            if (!results || results.length === 0) {
-                console.warn('Nenhum resultado encontrado para a FURIA.');
-                return [];
-            }
-
-            const matchHistory = results.slice(0, 5); // Retorna os últimos 5 resultados
-            CacheService.set(cacheKey, matchHistory); // Cache the data
-            return matchHistory;
-        } catch (error) {
-            console.error('Erro ao buscar histórico de partidas da FURIA:', error);
-            if (error instanceof Error) {
-                logger.error(`Erro ao buscar histórico de partidas da FURIA: ${error.message}`);
-            } else {
-                logger.error('Erro ao buscar histórico de partidas da FURIA: Erro desconhecido');
-            }
-            throw new Error('Não foi possível obter o histórico de partidas da FURIA.');
-        }
-    }
-
+    // Recupera estatísticas de um jogador específico pelo ID.
     static async getPlayerStats(playerId: number): Promise<{ name: string; stats: string }> {
         const cacheKey = `playerStats_${playerId}`;
         const cachedData = CacheService.get<{ name: string; stats: string }>(cacheKey);
@@ -171,15 +175,10 @@ export class HLTVService {
                 stats: `Rating: ${rating}`
             };
 
-            CacheService.set(cacheKey, playerStats); // Cache the data
+            CacheService.set(cacheKey, playerStats);
             return playerStats;
         } catch (error) {
-            console.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}:`, error);
-            if (error instanceof Error) {
-                logger.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}: ${error.message}`);
-            } else {
-                logger.error(`Erro ao buscar estatísticas do jogador com ID ${playerId}: Erro desconhecido`);
-            }
+            this.handleError(error, `Erro ao buscar estatísticas do jogador com ID ${playerId}`);
             throw new Error('Não foi possível obter as estatísticas do jogador.');
         }
     }

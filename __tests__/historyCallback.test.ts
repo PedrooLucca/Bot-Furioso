@@ -1,3 +1,5 @@
+// Testes unitários para handleHistoryCallback, verificando o envio de mensagens com o histórico de partidas da FURIA.
+
 import { handleHistoryCallback } from '../src/callbacks/historyCallback';
 import TelegramBot from 'node-telegram-bot-api';
 import { HLTVService } from '../src/services/HLTVService';
@@ -5,6 +7,10 @@ import { HLTVService } from '../src/services/HLTVService';
 jest.mock('src/services/HLTVService');
 
 const mockedHLTVService = HLTVService as jest.Mocked<typeof HLTVService>;
+
+const CHAT_ID = 12345;
+const NO_HISTORY_MESSAGE = '📜 Não há histórico de partidas disponível para a FURIA.';
+const ERROR_MESSAGE = '❌ Não foi possível obter o histórico de partidas da FURIA.';
 
 describe('handleHistoryCallback', () => {
     let bot: jest.Mocked<TelegramBot>;
@@ -24,20 +30,20 @@ describe('handleHistoryCallback', () => {
 
         mockedHLTVService.getFuriaMatchHistory.mockResolvedValueOnce(mockHistory);
 
-        await handleHistoryCallback(bot, 12345);
+        await handleHistoryCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('📜 *Histórico de Partidas da FURIA* 📜'),
             { parse_mode: 'Markdown' }
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('FURIA vs Team2'),
             expect.any(Object)
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('FURIA vs Team3'),
             expect.any(Object)
         );
@@ -46,22 +52,16 @@ describe('handleHistoryCallback', () => {
     it('should send a message if no match history is available', async () => {
         mockedHLTVService.getFuriaMatchHistory.mockResolvedValueOnce([]);
 
-        await handleHistoryCallback(bot, 12345);
+        await handleHistoryCallback(bot, CHAT_ID);
 
-        expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
-            '📜 Não há histórico de partidas disponível para a FURIA.'
-        );
+        expect(sendMessageMock).toHaveBeenCalledWith(CHAT_ID, NO_HISTORY_MESSAGE);
     });
 
     it('should send an error message if fetching match history fails', async () => {
         mockedHLTVService.getFuriaMatchHistory.mockRejectedValueOnce(new Error('API Error'));
 
-        await handleHistoryCallback(bot, 12345);
+        await handleHistoryCallback(bot, CHAT_ID);
 
-        expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
-            '❌ Não foi possível obter o histórico de partidas da FURIA.'
-        );
+        expect(sendMessageMock).toHaveBeenCalledWith(CHAT_ID, ERROR_MESSAGE);
     });
 });

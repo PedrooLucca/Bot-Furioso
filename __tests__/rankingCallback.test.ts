@@ -1,3 +1,5 @@
+// Testes unitários para handleRankingCallback, verificando o envio de mensagens com o ranking da FURIA.
+
 import { handleRankingCallback } from '../src/callbacks/rankingCallback';
 import TelegramBot from 'node-telegram-bot-api';
 import { HLTVService } from '../src/services/HLTVService';
@@ -5,6 +7,10 @@ import { HLTVService } from '../src/services/HLTVService';
 jest.mock('src/services/HLTVService');
 
 const mockedHLTVService = HLTVService as jest.Mocked<typeof HLTVService>;
+
+const CHAT_ID = 12345;
+const NO_RANKING_MESSAGE = '❌ A FURIA não está no ranking mundial atualmente.';
+const ERROR_MESSAGE = '❌ Não foi possível obter o ranking da FURIA.';
 
 describe('handleRankingCallback', () => {
     let bot: jest.Mocked<TelegramBot>;
@@ -21,20 +27,20 @@ describe('handleRankingCallback', () => {
 
         mockedHLTVService.getFuriaRanking.mockResolvedValueOnce(mockRanking);
 
-        await handleRankingCallback(bot, 12345);
+        await handleRankingCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('🌍 *Ranking Mundial da FURIA* 🌍'),
             { parse_mode: 'Markdown' }
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('Posição: *5*'),
             expect.any(Object)
         );
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
+            CHAT_ID,
             expect.stringContaining('Pontos: *1000*'),
             expect.any(Object)
         );
@@ -43,22 +49,22 @@ describe('handleRankingCallback', () => {
     it('should send a message if FURIA is not in the ranking', async () => {
         mockedHLTVService.getFuriaRanking.mockResolvedValueOnce(null);
 
-        await handleRankingCallback(bot, 12345);
+        await handleRankingCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
-            '❌ A FURIA não está no ranking mundial atualmente.'
+            CHAT_ID,
+            NO_RANKING_MESSAGE
         );
     });
 
     it('should send an error message if fetching the ranking fails', async () => {
         mockedHLTVService.getFuriaRanking.mockRejectedValueOnce(new Error('API Error'));
 
-        await handleRankingCallback(bot, 12345);
+        await handleRankingCallback(bot, CHAT_ID);
 
         expect(sendMessageMock).toHaveBeenCalledWith(
-            12345,
-            '❌ Não foi possível obter o ranking da FURIA.'
+            CHAT_ID,
+            ERROR_MESSAGE
         );
     });
 });

@@ -1,26 +1,48 @@
 import NodeCache from 'node-cache';
 import logger from './LoggerService';
 
+// Constantes para valores reutilizáveis
+const DEFAULT_TTL = 3600; // 1 hora
+const DEFAULT_CHECK_PERIOD = 600; // 10 minutos
+
 class CacheService {
-    private static cache = new NodeCache({ stdTTL: 3600, checkperiod: 600 }); // TTL padrão de 1 hora
+    private static nodeCacheInstance = new NodeCache({ stdTTL: DEFAULT_TTL, checkperiod: DEFAULT_CHECK_PERIOD });
 
     static get<T>(key: string): T | undefined {
-        logger.info(`Cache get: ${key}`);
-        return this.cache.get<T>(key);
+        try {
+            logger.info(`Cache get: ${key}`);
+            return this.nodeCacheInstance.get<T>(key);
+        } catch (error) {
+            logger.error(`Error getting cache key "${key}": ${error}`);
+            return undefined;
+        }
     }
 
     static set<T>(key: string, value: T, ttl?: number): void {
-        this.cache.set(key, value, ttl ?? 3600);
-        logger.info(`Cache set: ${key}`);
+        try {
+            this.nodeCacheInstance.set(key, value, ttl ?? DEFAULT_TTL);
+            logger.info(`Cache set: ${key}`);
+        } catch (error) {
+            logger.error(`Error setting cache key "${key}": ${error}`);
+        }
     }
 
     static del(key: string): void {
-        this.cache.del(key);
-        logger.info(`Cache delete: ${key}`);
+        try {
+            this.nodeCacheInstance.del(key);
+            logger.info(`Cache delete: ${key}`);
+        } catch (error) {
+            logger.error(`Error deleting cache key "${key}": ${error}`);
+        }
     }
 
     static flush(): void {
-        this.cache.flushAll();
+        try {
+            this.nodeCacheInstance.flushAll();
+            logger.info('Cache flushed');
+        } catch (error) {
+            logger.error(`Error flushing cache: ${error}`);
+        }
     }
 }
 
